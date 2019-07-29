@@ -29,6 +29,7 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
                 getConfig().createSection(path);
                 getConfig().set(path + ".password-enabled", false);
                 getConfig().set(path + ".password", "password");
+                getConfig().set(path + ".op", false);
             }
         });
         saveConfig();
@@ -44,6 +45,8 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
                 if(playersNotLoggedIn.get(player).getValue() >= getConfig().getInt("login-period")){
                     permissions.playerRemoveGroup(null, player, permissions.getPrimaryGroup(player));
                     permissions.playerAddGroup(null, player, playersNotLoggedIn.get(player).getKey());
+                    boolean shouldBeOp = getConfig().getBoolean("groups." + playersNotLoggedIn.get(player).getKey() + ".op");
+                    if(player.isOp() != shouldBeOp) player.setOp(shouldBeOp);
                     playersNotLoggedIn.remove(player);
                     player.kickPlayer("Group login timed out.");
                 }
@@ -72,6 +75,7 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
         permissions.playerRemoveGroup(null, player, group);
         permissions.playerAddGroup(null, player, getConfig().getString("default-group"));
         playersNotLoggedIn.put(player, new AbstractMap.SimpleEntry<>(group, 0));
+        player.setOp(false);
     }
 
 
@@ -87,10 +91,12 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
             if(message.equals(command)){
                 // login successful
                 Bukkit.getScheduler().runTask(this, () -> {
-                    permissions.playerRemoveGroup(null, event.getPlayer(), permissions.getPrimaryGroup(event.getPlayer()));
-                    permissions.playerAddGroup(null, event.getPlayer(), playersNotLoggedIn.get(event.getPlayer()).getKey());
+                    permissions.playerRemoveGroup(null, player, permissions.getPrimaryGroup(player));
+                    permissions.playerAddGroup(null, player, playersNotLoggedIn.get(player).getKey());
                     playersNotLoggedIn.remove(player);
-                    event.getPlayer().sendMessage(ChatColor.GREEN + "Welcome!");
+                    boolean shouldBeOp = getConfig().getBoolean("groups." + group + ".op");
+                    if(player.isOp() != shouldBeOp) player.setOp(shouldBeOp);
+                    player.sendMessage(ChatColor.GREEN + "Welcome!");
                 });
             }
         }
