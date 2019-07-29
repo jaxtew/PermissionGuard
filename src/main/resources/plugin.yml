@@ -1,0 +1,5 @@
+name: "PermissionGuard"
+main: "me.jts3304.permissionguard.PermissionGuardPlugin"
+version: "${project.version}"
+api-version: "1.14"
+depend: ["Vault"]

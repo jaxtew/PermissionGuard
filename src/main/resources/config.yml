@@ -1,0 +1,8 @@
+# PermissionGuard Configuration File
+# For the login command, <password> should be replaced with the group password in game
+# The login period is in seconds
+# The groups section is filled automatically
+login-command: "#@pexsecurity <password>"
+login-period: 20
+default-group: "default"
+groups:
