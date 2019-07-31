@@ -6,7 +6,7 @@
 
     <groupId>me.jts3304</groupId>
     <artifactId>PermissionGuard</artifactId>
-    <version>1.1.0</version>
+    <version>1.2</version>
 
     <repositories>
         <repository>

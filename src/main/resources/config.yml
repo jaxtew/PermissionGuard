@@ -2,7 +2,14 @@
 # For the login command, <password> should be replaced with the group password in game
 # The login period is in seconds
 # The groups section is filled automatically
+# Blocked commands can still be executed by the console (if it was allowed by the command)
 login-command: "#@pexsecurity <password>"
-login-period: 20
+login-prompt: "&4Please log in to your group!"
+login-welcome: "&aWelcome!"
+login-timeout: 20
+login-timeout-message: "Group login timed out"
 default-group: "default"
+blocked-command-message: "&cThis command is blocked."
+blocked-commands:
+  - put-command-here
 groups:

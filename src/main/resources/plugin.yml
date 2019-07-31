@@ -3,3 +3,8 @@ main: "me.jts3304.permissionguard.PermissionGuardPlugin"
 version: "${project.version}"
 api-version: "1.14"
 depend: ["Vault"]
+commands:
+  pgreload:
+    aliases: [pgr]
+    permission: "permissionguard.reload"
+    permission-message: "\u00A7cYou do not have permission to do that."

@@ -3,14 +3,21 @@ package me.jts3304.permissionguard;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class PermissionGuardPlugin extends JavaPlugin implements Listener {
@@ -34,21 +41,25 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
         });
         saveConfig();
         getServer().getPluginManager().registerEvents(this, this);
+        getCommand("pgreload").setExecutor(this);
         Bukkit.getOnlinePlayers().forEach(this::addPlayer);
         // LOGIN CHECKER
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, ()-> {
             List<Player> keySet = new ArrayList<>(playersNotLoggedIn.keySet());
             keySet.forEach(player -> {
                 playersNotLoggedIn.get(player).setValue(playersNotLoggedIn.get(player).getValue() + 1);
-                if(playersNotLoggedIn.get(player).getValue() % 5 == 0) player.sendMessage(ChatColor.DARK_RED + "Please log " +
-                        "in to your group.");
-                if(playersNotLoggedIn.get(player).getValue() >= getConfig().getInt("login-period")){
+                if(playersNotLoggedIn.get(player).getValue() % 5 == 0)
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                            getConfig().getString("login-prompt")));
+                if(playersNotLoggedIn.get(player).getValue() >= getConfig().getInt("login-timeout")){
                     permissions.playerRemoveGroup(null, player, permissions.getPrimaryGroup(player));
                     permissions.playerAddGroup(null, player, playersNotLoggedIn.get(player).getKey());
                     boolean shouldBeOp = getConfig().getBoolean("groups." + playersNotLoggedIn.get(player).getKey() + ".op");
                     if(player.isOp() != shouldBeOp) player.setOp(shouldBeOp);
                     playersNotLoggedIn.remove(player);
-                    player.kickPlayer("Group login timed out.");
+                    player.kickPlayer(
+                            ChatColor.translateAlternateColorCodes('&', getConfig().getString("login" +
+                            "-timeout-message")));
                 }
             });
         }, 0L, 20L);
@@ -96,9 +107,28 @@ public class PermissionGuardPlugin extends JavaPlugin implements Listener {
                     playersNotLoggedIn.remove(player);
                     boolean shouldBeOp = getConfig().getBoolean("groups." + group + ".op");
                     if(player.isOp() != shouldBeOp) player.setOp(shouldBeOp);
-                    player.sendMessage(ChatColor.GREEN + "Welcome!");
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                            getConfig().getString("login-welcome")));
                 });
             }
         }
+    }
+
+    @EventHandler
+    public void onCommandPreprocess(PlayerCommandPreprocessEvent event){
+        getConfig().getStringList("blocked-commands").forEach(command -> {
+            if(event.getMessage().substring(1).startsWith(command)){
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        getConfig().getString("blocked-command-message")));
+            }
+        });
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        reloadConfig();
+        sender.sendMessage(ChatColor.GREEN + "PermissionGuard configuration file reloaded.");
+        return true;
     }
 }
